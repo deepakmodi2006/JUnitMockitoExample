@@ -1,0 +1,137 @@
+A unit test is a piece of code written by a developer that executes a specific functionality in the code to be tested 
+and asserts a certain behavior or state. The percentage of code which is tested by unit tests is typically called test coverage.
+
+An integration test aims to test the behavior of a component or the integration between a set of components. 
+The term functional test is sometimes used as synonym for integration test. Integration tests check that the 
+whole system works as intended, therefore they are reducing the need for intensive manual tests.
+
+Performance tests are used to benchmark software components repeatedly. Their purpose is to ensure that the code 
+under test runs fast enough even if it’s under high load.
+
+There are several testing frameworks available for Java. The most popular ones are JUnit and TestNG.
+
+Test codes should be kept separate in project:
+src/main/java - for Java classes
+src/test/java - for test classes
+
+A JUnit test is a method contained in a class which is only used for testing. This is called a Test class. 
+To define that a certain method is a test method, annotate it with the @Test annotation. This method executes the 
+code under test. You use an assert method, provided by JUnit or another assert framework, to check an expected result 
+versus the actual result. These method calls are typically called asserts or assert statements.
+You should provide meaningful messages in assert statements. 
+
+Refer: http://www.vogella.com/tutorials/JUnit/article.html
+My Java Class to Test:
+
+package com.dmodi;
+class MyClass {
+	public int multiply(int i, int j) {
+		if (j > 999) {
+			throw new IllegalArgumentException("Second Parameter should be less than 1000");
+		}
+		return i *j;
+	}
+}
+
+//Test Class
+package com.dmodi;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+public class MyTests {
+	@Test
+	public void multiplicationOfZeroIntegersShouldReturnZero() {
+		MyClass tester = new MyClass(); //MyClass is tested
+
+		//assert statements
+		assertEquals("10 x 0 must be 0", 0, tester.multiply(10, 0));
+		assertEquals("0 x 10 must be 0", 0, tester.multiply(0, 10));
+		assertEquals("0 x 0 must be 0", 0, tester.multiply(0, 0));
+		assertEquals("10 x 10 must be 100", 100, tester.multiply(10, 10));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testExceptionIsThrown() {
+		MyClass tester = new MyClass();
+		tester.multiply(5, 1000);
+	}
+}
+
+You can also run your JUnit tests outside our IDE via standard Java code. Build systems like Apache Maven or Gradle in 
+combination with a Continuous Integration Server (like Jenkins) can be used to execute tests automatically on a regular basis.
+The org.junit.runner.JUnitCore class provides the runClasses() method. This method allows you to run one or several tests classes. 
+As a return parameter you receive an object of the type org.junit.runner.Result. This object can be used to retrieve information about the tests.
+
+package com.dmodi;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
+public class MyTestRunner {
+	public static void main(String[] args) {
+		Result result = JUnitCore.runClasses(MyTests.class);
+		for (Failure failure : result.getFailures()) {
+			System.out.println(failure.toString());
+		}
+		System.out.println("Test Runner Execution is done..");
+	}
+}
+
+JUnit assumes that all test methods can be executed in an arbitrary order. 
+Annotation Descriptions:
+
+@Test : Identifies a method as a test method.
+@Before : Executed before each test. It is used to prepare the test environment (e.g., read input data, initialize the class).
+@After : Executed after each test. It is used to cleanup the test environment (e.g., delete temporary data, restore defaults). 
+		 It can also save memory by cleaning up expensive memory structures.
+		 
+@BeforeClass : Executed once, before the start of all tests. It is used to perform time intensive activities, for example, 
+			   to connect to a database. Methods marked with this annotation need to be defined as static to work with JUnit.
+
+@AfterClass : Executed once, after all tests have been finished. It is used to perform clean-up activities, for example, to 
+			  disconnect from a database. Methods annotated with this annotation need to be defined as static to work with JUnit.
+
+@Ignore : Marks that the test should be disabled. This is useful when the underlying code has been changed and the test case has 
+		  not yet been adapted. Or if the execution time of this test is too long to be included. It is best practice to provide 
+		  the optional description, why the test is disabled.
+
+@Test (expected = Exception.class) : Fails if the method does not throw the named exception.
+@Test(timeout=100) : Fails if the method takes longer than 100 milliseconds.
+
+
+JUnit provides static methods to test for certain conditions via the Assert class. These assert statements typically start with assert. 
+They allow you to specify the error message, the expected and the actual result. 
+
+fail([message]) : Let the method fail. Might be used to check that a certain part of the code is not reached or to 
+				  have a failing test before the test code is implemented. The message parameter is optional.
+assertTrue([message,] boolean condition) : Checks that the boolean condition is true.
+assertFalse([message,] boolean condition) : Checks that the boolean condition is false.
+assertEquals([message,] expected, actual) : Tests that two values are the same. Note: for arrays the reference is checked not the content of the arrays.
+assertEquals([message,] expected, actual, tolerance) : Test that float or double values match. The tolerance is the number of decimals which must be the same.
+assertNull([message,] object) : Checks that the object is null.
+assertNotNull([message,] object) : Checks that the object is not null.
+assertSame([message,] expected, actual) : Checks that both variables refer to the same object.
+assertNotSame([message,] expected, actual) : Checks that both variables refer to different objects.
+
+If you have several test classes, you can combine them into a test suite. Running a test suite executes all test classes 
+in that suite in the specified order. A test suite can also contain other test suites.
+
+package com.dmodi;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+@RunWith(Suite.class)
+@SuiteClasses({
+	MyTests.class
+	//,MySecondClassTest.class 
+})
+public class AllTests {
+}
+
+The @Ignore annotation allow to statically ignore a test. Alternatively you can use Assume.assumeFalse or Assume.assumeTrue 
+to define a condition for the test. Assume.assumeFalse marks the test as invalid, if its condition evaluates to true. 
+Assume.assumeTrue evaluates the test as invalid if its condition evaluates to false. For example, the following disables a test on Linux:
+	Assume.assumeFalse(System.getProperty("os.name").contains("Linux"));
+
+For Complete Details check code in GIT.	
+	
